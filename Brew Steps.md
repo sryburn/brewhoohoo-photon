@@ -19,11 +19,11 @@
 
 ##### Water Chemicals
 ###### IPA
-55L = 22G Gypsum, 9.4G Epsom Salt
-45L = 18G Gypsum, 7.7G Epsom Salt
-35L = 14G Gypsum, 6G Epsom Salt
+55L = 22G Gypsum, 9.4G Epsom Salt  
+45L = 18G Gypsum, 7.7G Epsom Salt  
+35L = 14G Gypsum, 6G Epsom Salt  
 
 ###### Std
-55L = 8G Gypsum, 8G Epsom Salt
-45L = 6.5G Gypsum, 6.5G Epsom Salt
-35L = 5.1G Gypsum, 5.1G Epsom Salt
+55L = 8G Gypsum, 8G Epsom Salt  
+45L = 6.5G Gypsum, 6.5G Epsom Salt  
+35L = 5.1G Gypsum, 5.1G Epsom Salt  
