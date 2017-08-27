@@ -1,22 +1,28 @@
+// This #include statement was automatically added by the Particle IDE.
+#include <OneWire.h>
+
+//Added manually in build.particle.io
+#include "DigoleGeo.h"
+#include "spark-dallas-temperature.h"
 
 #define _Digole_Serial_UART_
-#include "DigoleGeo.h"
-#include "OneWire/OneWire.h"
-#include "spark-dallas-temperature/spark-dallas-temperature.h"
+
+SYSTEM_THREAD(ENABLED);
 
 DallasTemperature dallas(new OneWire(A0));
 
 //Brew probes
 DeviceAddress mashSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84}; 
 DeviceAddress coilSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
-// DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
-// DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
+DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
+DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
 
 
 //Test probes
-// DeviceAddress mashSensor ={0x28, 0xFF, 0xE3, 0x94, 0x4, 0x0, 0x0, 0xAD}; //brewpi probe
-DeviceAddress hltSensor ={0x28, 0x1B, 0xA7, 0xC6, 0x7, 0x0, 0x0, 0x95};
-DeviceAddress boilSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};
+// DeviceAddress mashSensor ={0x28, 0xFF, 0xE3, 0x94, 0x4, 0x0, 0x0, 0xAD}; //brewpi fridge probe
+// DeviceAddress coilSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};  // short stubby
+// DeviceAddress hltSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};  // short stubby
+// DeviceAddress boilSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};  // short stubby
 
 double mashTemp = 0.0;
 double boilTemp = 0.0;
@@ -71,7 +77,7 @@ bool wifiState = false;
 volatile bool debounced = true;
 
 STARTUP(WiFi.selectAntenna(ANT_INTERNAL));
-SYSTEM_MODE(SEMI_AUTOMATIC);
+SYSTEM_MODE(AUTOMATIC);
 
 DigoleSerialDisp mydisp(&Serial1, 115200);
 
@@ -82,7 +88,7 @@ volatile unsigned long boilOnTime = 0;
 
 //Functions run on timer
 Timer boilElementTimer(15, driveBoil);
-Timer publish(5000, timeToPublish);
+Timer publish(6000, timeToPublish); //This is used to fire webhook. Webhook limit is 10 per minute
 Timer runDebounce(10, debounce);
 
 void setup() {
@@ -92,6 +98,7 @@ void setup() {
     
     boilElementTimer.start();
     runDebounce.start();
+    publish.start();
     mydisp.begin();
 
     pinMode(encoderA, INPUT_PULLUP);
@@ -219,7 +226,7 @@ void loop() {
             case 0: //boil
             analogWrite(redLed, 0);
             analogWrite(greenLed, 255);
-            analogWrite(blueLed, 255);
+            analogWrite(blueLed, 255, 65000);
             mydisp.setTrueColor(255,0,0);
             mydisp.drawBox(0,64,79,31);
             mydisp.setTrueColor(0,0,0);
@@ -233,7 +240,7 @@ void loop() {
             case 1: //HLT
             analogWrite(redLed, 125);
             analogWrite(greenLed, 0);
-            analogWrite(blueLed, 255);
+            analogWrite(blueLed, 255, 65000);
             mydisp.setTrueColor(125,255,0);
             mydisp.drawBox(80,64,79,31);
             mydisp.setTrueColor(0,0,0);
@@ -247,7 +254,7 @@ void loop() {
             case 2: //Pump1
             analogWrite(redLed, 125);                
             analogWrite(greenLed, 255);
-            analogWrite(blueLed, 0);
+            analogWrite(blueLed, 0, 65000);
             mydisp.setTrueColor(125,0,255);
             mydisp.drawBox(80,96,79,31);
             mydisp.setTrueColor(0,0,0);
@@ -261,7 +268,7 @@ void loop() {
             case 3: //Pump2
             analogWrite(redLed, 255);                
             analogWrite(greenLed, 0);
-            analogWrite(blueLed, 255);
+            analogWrite(blueLed, 255, 65000);
             mydisp.setTrueColor(0, 255, 0);
             mydisp.drawBox(0,96,79,31);
             mydisp.setTrueColor(0,0,0);
@@ -368,17 +375,17 @@ void saveTemperature(uint8_t* device, double &value){
     }
 }
 
-void connect() {
-    if (Particle.connected() == false) {
-        Particle.connect();
-    }
-    publish.start();
-}
+// void connect() {
+//     if (Particle.connected() == false) {
+//         Particle.connect();
+//     }
+//     publish.start();
+// }
 
-void disconnect() {
-    publish.stop();
-    WiFi.off();
-}
+// void disconnect() {
+//     publish.stop();
+//     WiFi.off();
+// }
 
 void dealWithButtonPress() {
     if (!modeChanged && buttonPressed) {
@@ -389,19 +396,20 @@ void dealWithButtonPress() {
             } else {
                 if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
                     longPressActive = true;
-            		wifiState = !wifiState;
-        			if (wifiState){
-        			    mydisp.setTrueColor(255,0,0);
-                        mydisp.drawCircle(70,3,3,1);
-        			    connect();
-        			    mydisp.setTrueColor(0,255,255);
-                        mydisp.drawCircle(70,3,3,1);
-                    }
-                    else{
-                        disconnect();
-                        mydisp.setTrueColor(0,0,0);
-                        mydisp.drawCircle(70,3,3,1);
-                    }
+                    //DO LONGPRESS STUFF
+        //     		wifiState = !wifiState;
+        // 			if (wifiState){
+        // 			    mydisp.setTrueColor(255,0,0);
+        //                 mydisp.drawCircle(70,3,3,1);
+        // 			    connect();
+        // 			    mydisp.setTrueColor(0,255,255);
+        //                 mydisp.drawCircle(70,3,3,1);
+        //             }
+        //             else{
+        //                 disconnect();
+        //                 mydisp.setTrueColor(0,0,0);
+        //                 mydisp.drawCircle(70,3,3,1);
+        //             }
                 }
             }
         } else {
