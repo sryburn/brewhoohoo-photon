@@ -10,7 +10,7 @@
 1. Mash should drop to 67 (slightly cooler is ok as will heat sightly)	
 1. Adjust HLT to 70 with a low pump	
 
-#### Notes	
+##### Notes:	
 * Mash Ratio	3 to 4 litres per KG
 * Ideal mash Temp 	65-68
 * Mash temp lags 1 deg with full pump	
