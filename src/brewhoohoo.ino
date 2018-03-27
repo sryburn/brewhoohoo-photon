@@ -1,28 +1,24 @@
-// This #include statement was automatically added by the Particle IDE.
-#include <OneWire.h>
+#define _Digole_Serial_UART_
 
-//Added manually in build.particle.io
 #include "DigoleGeo.h"
 #include "spark-dallas-temperature.h"
-
-#define _Digole_Serial_UART_
 
 SYSTEM_THREAD(ENABLED);
 
 DallasTemperature dallas(new OneWire(A0));
 
 //Brew probes
-DeviceAddress mashSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84}; 
-DeviceAddress coilSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
-DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
-DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
+// DeviceAddress mashSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84};
+// DeviceAddress coilSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
+// DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
+// DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
 
 
 //Test probes
-// DeviceAddress mashSensor ={0x28, 0xFF, 0xE3, 0x94, 0x4, 0x0, 0x0, 0xAD}; //brewpi fridge probe
-// DeviceAddress coilSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};  // short stubby
-// DeviceAddress hltSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};  // short stubby
-// DeviceAddress boilSensor ={0x28, 0xAF, 0x55, 0x74, 0x6, 0x0, 0x0, 0x56};  // short stubby
+DeviceAddress mashSensor = {0x28, 0xFF, 0x5E, 0xB6, 0x0, 0x17, 0x4, 0x4};
+DeviceAddress coilSensor = {0x28, 0xFF, 0x63, 0xA8, 0x0, 0x17, 0x5, 0x1F};
+DeviceAddress hltSensor = {0x28, 0x5B, 0xC4, 0xAC, 0x9, 0x0, 0x0, 0xC0};
+DeviceAddress boilSensor = {0x28, 0xFF, 0xA8, 0xAF, 0x0, 0x17, 0x4, 0x95};
 
 double mashTemp = 0.0;
 double boilTemp = 0.0;
@@ -37,10 +33,10 @@ int button = D6;
 int redLed = D3;
 int greenLed = D2;
 int blueLed = D1;
-int pump1 = WKP; 
-int pump2 = D0; 
-int boilElement = A2;  
-int hltElement = A1; 
+int pump1 = WKP;
+int pump2 = D0;
+int boilElement = A2;
+int hltElement = A1;
 int mode = 0;
 
 
@@ -82,7 +78,7 @@ SYSTEM_MODE(AUTOMATIC);
 DigoleSerialDisp mydisp(&Serial1, 115200);
 
 // 10 second Time Proportional Output window
-unsigned long WindowSize = 10000; 
+unsigned long WindowSize = 10000;
 unsigned long windowStartTime;
 volatile unsigned long boilOnTime = 0;
 
@@ -94,8 +90,8 @@ Timer runDebounce(10, debounce);
 void setup() {
     dallas.begin();
     // Particle.variable("mashTemp", mashTemp);
-    // Particle.variable("boilTemp", boilTemp);  
-    
+    // Particle.variable("boilTemp", boilTemp);
+
     boilElementTimer.start();
     runDebounce.start();
     publish.start();
@@ -111,7 +107,7 @@ void setup() {
     pinMode(pump2, OUTPUT);
     pinMode(boilElement, OUTPUT);
     pinMode(hltElement, OUTPUT);
-    
+
     analogWrite(redLed, 0);
     analogWrite(greenLed, 255);
     analogWrite(blueLed, 255);
@@ -121,7 +117,7 @@ void setup() {
     delay(3500);
 
     displayStaticText();
-    
+
     boilPower = 0;
 
 }
@@ -131,7 +127,7 @@ void loop() {
     dallas.requestTemperaturesByAddress(mashSensor);
     dallas.requestTemperaturesByAddress(boilSensor);
     dallas.requestTemperaturesByAddress(hltSensor);
-    dallas.requestTemperaturesByAddress(coilSensor);    
+    dallas.requestTemperaturesByAddress(coilSensor);
     saveTemperature(mashSensor, mashTemp);
     saveTemperature(boilSensor, boilTemp);
     saveTemperature(hltSensor, hltTemp);
@@ -140,7 +136,7 @@ void loop() {
     //Drive Pumps
     analogWrite(pump1, pump1Power*2.55, 65000);
     analogWrite(pump2, pump2Power*2.55, 65000);
-    
+
     if (timeToPublishFlag){
         publishTemperatures();
         timeToPublishFlag = false;
@@ -160,14 +156,14 @@ void loop() {
         hltElementState = 0;
         displayElementIndicator(false, 2);
     }
-    
+
     //Boil driven from timer
-    
-    
+
+
     //update display if  temp changed
     displayUpdatedTemperatures();
 
-    
+
     //update display if setpoints changed
     if (boilPower != prevBoilPower){
         mydisp.setTrueColor(0,0,0);
@@ -180,35 +176,35 @@ void loop() {
         prevBoilPower = boilPower;
         boilOnTime = boilPower * 100;
     }
-    
+
     if (hltSet != prevHltSet){
         mydisp.setTrueColor(0,0,0);
         mydisp.drawBox(84,77,71,14);
         mydisp.setFont(18);
-        mydisp.setTrueColor(255,255,255);        
+        mydisp.setTrueColor(255,255,255);
         mydisp.setPrintPos(90,89,1);
         mydisp.print(hltSet,1);
         mydisp.print(degree);
         mydisp.print('C');
         prevHltSet = hltSet;
     }
-    
+
     if (pump2Power != prevPump2Power){
         mydisp.setTrueColor(0,0,0);
         mydisp.drawBox(84,109,71,14);
         mydisp.setFont(18);
-        mydisp.setTrueColor(255,255,255);        
+        mydisp.setTrueColor(255,255,255);
         mydisp.setPrintPos(90,121,1);
         mydisp.print(pump2Power);
         prevPump2Power = pump2Power;
         mydisp.print('%');
     }
-    
+
     if (pump1Power != prevPump1Power){
         mydisp.setTrueColor(0,0,0);
         mydisp.drawBox(4,109,71,14);
         mydisp.setFont(18);
-        mydisp.setTrueColor(255,255,255);        
+        mydisp.setTrueColor(255,255,255);
         mydisp.setPrintPos(10,121,1);
         mydisp.print(pump1Power);
         prevPump1Power = pump1Power;
@@ -216,12 +212,12 @@ void loop() {
     }
     //dealing with button press
     dealWithButtonPress();
-    
+
     //dealing with mode changes
 
     if (prevMode != mode) {
         prevMode = mode;
-        
+
         switch(mode) {
             case 0: //boil
             analogWrite(redLed, 0);
@@ -236,7 +232,7 @@ void loop() {
             mydisp.drawBox(0,96,79,31);
             mydisp.setTrueColor(255,255,255);
             break;
-            
+
             case 1: //HLT
             analogWrite(redLed, 125);
             analogWrite(greenLed, 0);
@@ -250,9 +246,9 @@ void loop() {
             mydisp.drawBox(0,96,79,31);
             mydisp.setTrueColor(255,255,255);
             break;
-            
+
             case 2: //Pump1
-            analogWrite(redLed, 125);                
+            analogWrite(redLed, 125);
             analogWrite(greenLed, 255);
             analogWrite(blueLed, 0, 65000);
             mydisp.setTrueColor(125,0,255);
@@ -264,9 +260,9 @@ void loop() {
             mydisp.drawBox(0,96,79,31);
             mydisp.setTrueColor(255,255,255);
             break;
-            
+
             case 3: //Pump2
-            analogWrite(redLed, 255);                
+            analogWrite(redLed, 255);
             analogWrite(greenLed, 0);
             analogWrite(blueLed, 255, 65000);
             mydisp.setTrueColor(0, 255, 0);
@@ -278,29 +274,29 @@ void loop() {
             mydisp.drawBox(80,96,79,31);
             mydisp.setTrueColor(255,255,255);
             break;
-            
+
         }
         //redrew the values
         mydisp.setFont(18);
-        
+
         mydisp.setTrueColor(255,255,255);
         mydisp.setPrintPos(10,89,1);
         mydisp.print(boilPower, 1);
         mydisp.print('%');
-        
+
         mydisp.setPrintPos(90,89,1);
         mydisp.print(hltSet, 1);
         mydisp.print(degree);
         mydisp.print('C');
-        
+
         mydisp.setPrintPos(90,121,1);
         mydisp.print(pump2Power, 1);
         mydisp.print('%');
-        
+
         mydisp.setPrintPos(10,121,1);
         mydisp.print(pump1Power, 1);
         mydisp.print('%');
-        
+
         mydisp.setFont(10);
         mydisp.setTrueColor(255,255,255);
         mydisp.setPrintPos(10,76,1);
@@ -311,7 +307,7 @@ void loop() {
         mydisp.print("Pump 2");
         mydisp.setPrintPos(10,108,1);
         mydisp.print("Pump 1");
-            
+
     }
 
 }
@@ -425,18 +421,18 @@ void dealWithButtonPress() {
         		    case 1: {
             	        if (hltSet > 0){hltSet = 0;}
             	        else {hltSet = 70;}
-            	        break;		        
+            	        break;
         		    }
         		    case 2: {
             	        if (pump2Power > 0){pump2Power = 0;}
             	        else {pump2Power = 100;}
-            	        break;		        
+            	        break;
         		    }
         		    case 3: {
             	        if (pump1Power > 0){pump1Power = 0;}
             	        else {pump1Power = 100;}
-            	        break;		        
-        		    }		    
+            	        break;
+        		    }
     		    }
     		}
         }
@@ -455,7 +451,7 @@ void publishTemperatures() {
 }
 
 void timeToPublish(){
-    timeToPublishFlag = true;    
+    timeToPublishFlag = true;
 }
 
 void debounce(){
@@ -468,18 +464,18 @@ int is_equal_3decplaces(double a, double b) {
     return ai == bi;
 }
 
-void driveBoil(){  
+void driveBoil(){
     unsigned long now = millis();
     if(now - windowStartTime>WindowSize){ //time to shift the Relay Window
         windowStartTime += WindowSize;
     }
-    
+
     if((boilOnTime > 100) && (boilOnTime > (now - windowStartTime))){
         if ((digitalRead(boilElement) == LOW) && (digitalRead(hltElement) == LOW)) {
             digitalWrite(boilElement,HIGH);
             boilElementState=1;
             displayElementIndicator(true, 1);
-        }   
+        }
     }
     else if (digitalRead(boilElement) == HIGH){
         digitalWrite(boilElement,LOW);
@@ -489,7 +485,7 @@ void driveBoil(){
 }
 
 void displayStaticText(){
-    mydisp.clearScreen(); 
+    mydisp.clearScreen();
     mydisp.backLightOn();
     mydisp.setFont(18);
     mydisp.setTrueColor(255,0,0);
@@ -503,7 +499,7 @@ void displayStaticText(){
     mydisp.print("M");
     mydisp.setPrintPos(0,50,1);
     mydisp.print("C");
-    
+
 }
 
 void displayElementIndicator(bool show, int element){
@@ -512,7 +508,7 @@ void displayElementIndicator(bool show, int element){
     } else {
         mydisp.setTrueColor(0,0,0);
     }
-    
+
     switch(element){
         case 1: { //boilElement
             mydisp.drawBox(0,0,7,7);
@@ -520,7 +516,7 @@ void displayElementIndicator(bool show, int element){
         }
         case 2: { //hltElement
             mydisp.drawBox(80,0,7,7);
-            break;		        
+            break;
         }
     }
 }
@@ -533,23 +529,23 @@ void displayUpdatedTemperatures(){
         mydisp.print(boilTemp, 1);
         prevBoilTemp = boilTemp;
     }
-    
+
     if  (!is_equal_3decplaces(hltTemp, prevHltTemp)){
         mydisp.setFont(120);
-        mydisp.setTrueColor(125,255,0);        
+        mydisp.setTrueColor(125,255,0);
         mydisp.setPrintPos(90,20,1);
         mydisp.print(hltTemp, 1);
         prevHltTemp = hltTemp;
-    }    
-    
+    }
+
     if  (!is_equal_3decplaces(coilTemp, prevCoilTemp)){
         mydisp.setFont(120);
         mydisp.setTrueColor(255,255,255);
-        mydisp.setPrintPos(10,50,1);        
+        mydisp.setPrintPos(10,50,1);
         mydisp.print(coilTemp, 1);
         prevCoilTemp = coilTemp;
     }
-    
+
     if  (!is_equal_3decplaces(mashTemp, prevMashTemp)){
         mydisp.setFont(120);
         mydisp.setTrueColor(255,255,255);
