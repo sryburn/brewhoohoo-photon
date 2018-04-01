@@ -9,37 +9,27 @@ Display display;
 
 #define testing //uncomment for test board
 
-#ifdef testing
-    DeviceAddress mashSensor = {0x28, 0xFF, 0x5E, 0xB6, 0x0, 0x17, 0x4, 0x4};
-    DeviceAddress coilSensor = {0x28, 0xFF, 0x63, 0xA8, 0x0, 0x17, 0x5, 0x1F};
-    DeviceAddress hltSensor = {0x28, 0x5B, 0xC4, 0xAC, 0x9, 0x0, 0x0, 0xC0};
-    DeviceAddress boilSensor = {0x28, 0xFF, 0xA8, 0xAF, 0x0, 0x17, 0x4, 0x95};
-#else
-    DeviceAddress mashSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84};
-    DeviceAddress coilSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
-    DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
-    DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
-#endif
+//Pin Definitions
+const int encoderA = D4;
+const int encoderB = D5;
+const int button = D6;
+const int redLed = D3;
+const int greenLed = D2;
+const int blueLed = D1;
+const int pump1 = WKP;
+const int pump2 = D0;
+const int boilElement = A2;
+const int hltElement = A1;
 
+//Globals
 double mashTemp = 0.0;
 double boilTemp = 0.0;
 double coilTemp = 0.0;
 double hltTemp = 0.0;
 double boilElementState;
 double hltElementState;
-
-int encoderA = D4;
-int encoderB = D5;
-int button = D6;
-int redLed = D3;
-int greenLed = D2;
-int blueLed = D1;
-int pump1 = WKP;
-int pump2 = D0;
-int boilElement = A2;
-int hltElement = A1;
 int mode = 0;
-
+bool timeToPublishFlag = false;
 volatile int modePos = 4000;
 volatile int boilPower = 0; //mode0
 volatile double hltSet = 0; //mode1
@@ -49,28 +39,12 @@ volatile bool buttonPressed = false;
 volatile bool modeChanged = false;
 volatile bool A_set = false;
 volatile bool B_set = false;
-
-int prevMode = -1;
-
-bool buttonArmed = false;
-bool longPressActive = false;
-bool timeToPublishFlag = false;
-
-unsigned long buttonTimer = 0;
-unsigned long longPressTime = 2000;
-
-bool wifiState = false;
 volatile bool debounced = true;
 
 STARTUP(WiFi.selectAntenna(ANT_INTERNAL));
 SYSTEM_MODE(AUTOMATIC);
 
-// 10 second Time Proportional Output window
-unsigned long WindowSize = 10000;
-unsigned long windowStartTime;
-volatile unsigned long boilOnTime = 0;
-
-//Functions run on timer
+//Functions that run on timer
 Timer boilElementTimer(15, driveBoil);
 Timer publish(6000, timeToPublish); //This is used to fire webhook. Webhook limit is 10 per minute
 Timer runDebounce(10, debounce);
@@ -87,7 +61,7 @@ void setup() {
     attachInterrupts();
     delay(3500); //Give the OLED time to fire up
     display.renderStaticText();
-    boilPower = 0; //Cos sometimes it gets incremented during startup
+    boilPower = 0; //Cos sometimes it somehow gets incremented during startup
 }
 
 void loop() {
@@ -98,6 +72,7 @@ void loop() {
     display.renderUpdatedSetpoints(boilPower, hltSet, pump1Power, pump2Power); //update display if setpoints changed
     dealWithButtonPress();
     dealWithModeChange();
+    publishJSON();
     //note: some additional functions run on timer
 }
 //######################################################################/
@@ -131,6 +106,17 @@ void attachInterrupts(){
 
 //***LOOP FUNCTIONS***//
 void getTemperatures(){
+    #ifdef testing
+        static DeviceAddress mashSensor = {0x28, 0xFF, 0x5E, 0xB6, 0x0, 0x17, 0x4, 0x4};
+        static DeviceAddress coilSensor = {0x28, 0xFF, 0x63, 0xA8, 0x0, 0x17, 0x5, 0x1F};
+        static DeviceAddress hltSensor = {0x28, 0x5B, 0xC4, 0xAC, 0x9, 0x0, 0x0, 0xC0};
+        static DeviceAddress boilSensor = {0x28, 0xFF, 0xA8, 0xAF, 0x0, 0x17, 0x4, 0x95};
+    #else
+        static DeviceAddress mashSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84};
+        static DeviceAddress coilSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
+        static DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
+        static DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
+    #endif
     dallas.requestTemperaturesByAddress(mashSensor);
     dallas.requestTemperaturesByAddress(boilSensor);
     dallas.requestTemperaturesByAddress(hltSensor);
@@ -144,11 +130,6 @@ void getTemperatures(){
 void drivePumps(){
     analogWrite(pump1, pump1Power*2.55, 65000);
     analogWrite(pump2, pump2Power*2.55, 65000);
-
-    if (timeToPublishFlag){
-        publishTemperatures();
-        timeToPublishFlag = false;
-    }
 }
 
 void driveHLT(){
@@ -167,6 +148,11 @@ void driveHLT(){
 }
 
 void dealWithButtonPress() {
+    static bool buttonArmed = false;
+    static unsigned long buttonTimer = 0;
+    static bool longPressActive = false;
+    static unsigned long longPressTime = 2000;
+    static bool wifiState = false;
     if (!modeChanged && buttonPressed) {
         if (pinReadFast(button) == HIGH) {
             if (buttonArmed == false) {
@@ -196,25 +182,25 @@ void dealWithButtonPress() {
     		    longPressActive = false;
         		} else {
         		    switch(mode){
-            		    case 0:
-          	        if (boilPower > 0){boilPower = 0;}
-          	        else {boilPower = 100;}
-          	        break;
+                    case 0:
+                    if (boilPower > 0){boilPower = 0;}
+                    else {boilPower = 100;}
+                    break;
 
-            		    case 1:
-          	        if (hltSet > 0){hltSet = 0;}
-          	        else {hltSet = 70;}
-          	        break;
+                    case 1:
+                    if (hltSet > 0){hltSet = 0;}
+                    else {hltSet = 70;}
+                    break;
 
-            		    case 2:
-          	        if (pump2Power > 0){pump2Power = 0;}
-          	        else {pump2Power = 100;}
-          	        break;
+                    case 2:
+                    if (pump2Power > 0){pump2Power = 0;}
+                    else {pump2Power = 100;}
+                    break;
 
-            		    case 3:
-          	        if (pump1Power > 0){pump1Power = 0;}
-          	        else {pump1Power = 100;}
-          	        break;
+                    case 3:
+                    if (pump1Power > 0){pump1Power = 0;}
+                    else {pump1Power = 100;}
+                    break;
         		    }
         		}
         }
@@ -222,11 +208,12 @@ void dealWithButtonPress() {
     if (pinReadFast(button) == LOW) {
         modeChanged = false;
         buttonArmed = false;
-    	buttonPressed = false;
+        buttonPressed = false;
     }
 }
 
 void dealWithModeChange(){
+    static int prevMode = -1;
     if (prevMode != mode) {
         display.renderUpdatedMode(mode, prevMode);
         prevMode = mode;
@@ -310,6 +297,10 @@ void doEncoderB() {
 //***TIMER FUNCTIONS***//
 
 void driveBoil(){
+  // 10 second Time Proportional Output window
+    static unsigned long WindowSize = 10000;
+    static unsigned long windowStartTime;
+    static volatile unsigned long boilOnTime;
     boilOnTime = boilPower * 100;
     unsigned long now = millis();
     if(now - windowStartTime>WindowSize){ //time to shift the Relay Window
@@ -352,10 +343,13 @@ void setButtonPressed() {
     buttonPressed = true;
 }
 
-void publishTemperatures() {
+void publishJSON() {
+    if (timeToPublishFlag){
         char data[256];
         snprintf(data, sizeof(data), "{\"mashTemp\":%f, \"boilTemp\":%f, \"hltTemp\":%f, \"coilTemp\":%f, \"boilElementState\":%f, \"hltElementState\":%f, \"pump1Power\":%d, \"pump2Power\":%d, \"boilPower\":%d, \"hltSetPoint\":%f}", mashTemp, boilTemp, hltTemp, coilTemp, boilElementState, hltElementState, pump1Power, pump2Power, boilPower, hltSet);
         Particle.publish("brewbot_data", data, PRIVATE);
+        timeToPublishFlag = false;
+    }
 }
 
 // void connect() {

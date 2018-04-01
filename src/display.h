@@ -24,7 +24,6 @@ void renderHltSet(double hltSet);
 void renderPump1Power(int pump1Power);
 void renderPump2Power(int pump2Power);
 int is_equal_3decplaces(double a, double b);
-void renderLabels();
 void drawMode(int x, int y, int h, int w);
 };
 

@@ -19,7 +19,15 @@ void Display::renderStaticText(){
     print("M");
     setPrintPos(0,50,1);
     print("C");
-    renderLabels();
+    setFont(10);
+    setPrintPos(10,76,1);
+    print("Boil Power");
+    setPrintPos(90,76,1);
+    print("HLT Set");
+    setPrintPos(90,108,1);
+    print("Pump 2");
+    setPrintPos(10,108,1);
+    print("Pump 1");
 }
 
 void Display::renderElementIndicator(bool show, int element){
@@ -144,20 +152,6 @@ void Display::renderUpdatedMode(int mode, int prevMode){
 }
 
 //private functions
-
-void Display::renderLabels(){
-    setFont(10);
-    setTrueColor(255,255,255);
-    setPrintPos(10,76,1);
-    print("Boil Power");
-    setPrintPos(90,76,1);
-    print("HLT Set");
-    setPrintPos(90,108,1);
-    print("Pump 2");
-    setPrintPos(10,108,1);
-    print("Pump 1");
-}
-
 void Display::renderBoilTemp(double boilTemp){
     setTrueColor(255,0,0);
     setPrintPos(10,20,1);
