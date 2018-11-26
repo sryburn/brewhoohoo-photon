@@ -7,7 +7,7 @@ SYSTEM_THREAD(ENABLED);
 DallasTemperature dallas(new OneWire(A0));
 Display display;
 
-#define testing //uncomment for test board
+#define testing //uncomment for test board ok
 
 #ifdef testing
     DeviceAddress mashSensor = {0x28, 0xFF, 0x5E, 0xB6, 0x0, 0x17, 0x4, 0x4};
