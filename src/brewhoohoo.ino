@@ -7,7 +7,7 @@ SYSTEM_THREAD(ENABLED);
 DallasTemperature dallas(new OneWire(A0));
 Display display;
 
-#define testing //uncomment for test board
+// #define testing //uncomment for test board
 
 //Pin Definitions
 const int encoderA = D4;
@@ -35,8 +35,10 @@ volatile int boilPower = 0; //mode0
 volatile double hltSet = 0; //mode1
 volatile int pump1Power = 0; //mode2
 volatile int pump2Power = 0; //mode3
+volatile double hltDriveSet = 0; //has mashing offset added if necessesary
 volatile bool buttonPressed = false;
 volatile bool modeChanged = false;
+volatile bool mashMode = false;
 volatile bool A_set = false;
 volatile bool B_set = false;
 volatile bool debounced = true;
@@ -67,6 +69,7 @@ void setup() {
 void loop() {
     getTemperatures();
     drivePumps();
+    addHltOffset();
     driveHLT();
     display.renderUpdatedTemperatures(boilTemp, hltTemp, mashTemp, coilTemp);  //update display if  temp changed
     display.renderUpdatedSetpoints(boilPower, hltSet, pump1Power, pump2Power); //update display if setpoints changed
@@ -112,8 +115,8 @@ void getTemperatures(){
         static DeviceAddress hltSensor = {0x28, 0x5B, 0xC4, 0xAC, 0x9, 0x0, 0x0, 0xC0};
         static DeviceAddress boilSensor = {0x28, 0xFF, 0xA8, 0xAF, 0x0, 0x17, 0x4, 0x95};
     #else
-        static DeviceAddress mashSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84};
-        static DeviceAddress coilSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
+        static DeviceAddress mashSensor = {0x28, 0xB7, 0x3A, 0x74, 0x6, 0x0, 0x0, 0xD2};
+        static DeviceAddress coilSensor = {0x28, 0xB8, 0x4E, 0x74, 0x6, 0x0, 0x0, 0x84};
         static DeviceAddress hltSensor = {0x28, 0xE7, 0xC, 0x74, 0x6, 0x0, 0x0, 0xE4};
         static DeviceAddress boilSensor = {0x28, 0xB3, 0xB5, 0x73, 0x6, 0x0, 0x0, 0x2C};
     #endif
@@ -132,15 +135,33 @@ void drivePumps(){
     analogWrite(pump2, pump2Power*2.55, 65000);
 }
 
+void addHltOffset(){
+    static int minOffset = 2;
+    static int maxOffset = 6;
+    static int offset;
+
+    if (mashMode && (mashTemp<=hltSet)){
+        int difference = (hltSet-mashTemp);
+        if (difference>=minOffset){
+          offset = min(maxOffset, difference);
+        } else {
+          offset = max(minOffset, difference);
+        }
+        hltDriveSet = (hltSet + offset);
+    } else {
+      hltDriveSet = hltSet;
+    }
+}
+
 void driveHLT(){
-    if (hltTemp < hltSet - 0.5){
+    if (hltTemp < hltDriveSet - 0.2){
         digitalWrite(boilElement,LOW);
         boilElementState = 0;
         display.renderElementIndicator(false, 1);
         digitalWrite(hltElement, HIGH);
         hltElementState = 1;
         display.renderElementIndicator(true, 2);
-    } else if (hltTemp > hltSet + 0.5){
+    } else if (hltTemp > hltDriveSet + 0.2){
         digitalWrite(hltElement, LOW);
         hltElementState = 0;
         display.renderElementIndicator(false, 2);
@@ -161,6 +182,22 @@ void dealWithButtonPress() {
             } else {
                 if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
                     longPressActive = true;
+
+                    if (mode == 1){
+                      mashMode = !mashMode;
+                    }
+
+                    if (mashMode){
+                      display.setFont(10); //TODO move to display class
+                      display.setTrueColor(255,255,255);
+                      display.setPrintPos(90,76,1);
+                      display.print("Mash Set");
+                    } else {
+                      display.setFont(10);
+                      display.setTrueColor(255,255,255);
+                      display.setPrintPos(90,76,1);
+                      display.print("HLT Set ");
+                    }
                     // DO LONGPRESS STUFF
             		    // wifiState = !wifiState;
         			      // if (wifiState){
