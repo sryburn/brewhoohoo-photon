@@ -5,7 +5,7 @@
 1. Fill Mash to 45L	
 1. Set HLT to 75 degrees
 1. Add chemicals for water profile 	
-1. Add grain when Mash gets to 73.5+ (at least two hours)	
+1. Add grain when Mash gets to 72.5+ (at least two hours)	
 1. Mash should drop to 67 (slightly cooler is ok as will heat sightly)	
 1. Adjust HLT to 70 with a low pump
 1. After 1 hour, raise HLT to 76 for mash out
@@ -16,6 +16,7 @@
 * Ideal mash Temp 	65-68
 * Mash temp lags 1 deg with full pump	
 * Mash temp lags 3.5 deg with 25% pump
+* Mash water looses 4.5 degrees with grain addition
 
 ##### Water Chemicals
 ###### IPA
