@@ -12,11 +12,12 @@
 1. Begin sparging
 
 ##### Notes:	
-* Mash Ratio	3 to 4 litres per KG
+* Mash Ratio	3 litres per KG
 * Ideal mash Temp 	65-68
 * Mash temp lags 1 deg with full pump	
 * Mash temp lags 3.5 deg with 25% pump
 * Mash water looses 4.5 degrees with grain addition
+* Mash absorbtion 0.65 litre per 1kg grain
 
 ##### Water Chemicals
 ###### IPA
