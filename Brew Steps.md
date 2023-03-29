@@ -31,6 +31,7 @@
 35L = 5.1G Gypsum, 5.1G Epsom Salt
 
 # Gelatin fining
+For 50L:
 * disolve 10g gelatin in 500ml cold water
 * Allow to bloom for 30mins then stir
 * Heat until at least 70degC
