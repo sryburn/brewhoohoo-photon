@@ -28,4 +28,9 @@
 ###### Std
 55L = 8G Gypsum, 8G Epsom Salt  
 45L = 6.5G Gypsum, 6.5G Epsom Salt  
-35L = 5.1G Gypsum, 5.1G Epsom Salt  
+35L = 5.1G Gypsum, 5.1G Epsom Salt
+
+# Gelatin fining
+* disolve 10g gelatin in 500ml cold water
+* Allow to bloom for 30mins then stir
+* Heat until at least 70degC
