@@ -20,6 +20,8 @@
 * Mash absorbtion 0.65 litre per 1kg grain
 
 ##### Water Chemicals
+to remove chlorine, 0.25g potasium metabisulphite to 25L water
+
 ###### IPA
 55L = 22G Gypsum, 9.4G Epsom Salt  
 45L = 18G Gypsum, 7.7G Epsom Salt  
