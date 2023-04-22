@@ -17,7 +17,7 @@
 * Mash temp lags 1 deg with full pump	
 * Mash temp lags 3.5 deg with 25% pump
 * Mash water looses 4.5 degrees with grain addition
-* Mash absorbtion 0.65 litre per 1kg grain
+* Mash absorbtion 0.6 litre per 1kg grain
 
 ##### Water Chemicals
 to remove chlorine, 0.25g potasium metabisulphite to 25L water
