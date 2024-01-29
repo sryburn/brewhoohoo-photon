@@ -20,7 +20,7 @@
 * Mash absorbtion 0.6 litre per 1kg grain
 
 ##### Water Chemicals
-to remove chlorine, 0.25g potasium metabisulphite to 25L water
+To remove chlorine, add 1ml of 10% potasium metabisulphite solution per 10 litres of water (equivalent to 10mg per litre)
 
 ###### IPA
 55L = 22G Gypsum, 9.4G Epsom Salt  
