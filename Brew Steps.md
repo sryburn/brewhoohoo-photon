@@ -34,9 +34,9 @@ Note: The above aligns with the commonly recomended 1 campden tablet per 20L con
 35L = 5.1G Gypsum, 5.1G Epsom Salt
 
 ###### Hazy
-55L = 3.1g table salt, 8.7g Epsom Salt, 17.3g calcium chloride 
-45L = 2.5g table salt, 7.2g Epsom Salt, 14.1g calcium chloride 
-35L = 2g table salt, 5.6g Epsom Salt, 11g calcium chloride 
+55L = 3.1g table salt, 8.7g Epsom Salt, 17.3g calcium chloride  
+45L = 2.5g table salt, 7.2g Epsom Salt, 14.1g calcium chloride  
+35L = 2g table salt, 5.6g Epsom Salt, 11g calcium chloride  
 
 # Gelatin fining
 For 50L:
