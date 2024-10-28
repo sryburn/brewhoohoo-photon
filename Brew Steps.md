@@ -20,7 +20,7 @@
 * Mash absorbtion 0.6 litre per 1kg grain
 
 ##### Water Chemicals
-To remove chlorine, add 1ml of 10% potasium metabisulphite solution per 10 litres of water (equivalent to 10mg per litre)
+To remove chlorine, add 1ml of 10% potasium metabisulphite solution per 10 litres of water (equivalent to 10mg per litre)  
 Note: The above aligns with the commonly recomended 1 campden tablet per 20L concentration, however in theory can go 10x less than this.
 
 ###### IPA
